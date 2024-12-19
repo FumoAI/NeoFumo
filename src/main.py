@@ -61,7 +61,8 @@ def play_audio(input_filename, chunk=1024):
     audio.terminate()
 
 if __name__ == "__main__":
-    output_filename = "output.wav"
+    # text = "现代标准汉语是以北京官话为基础音，广泛通行于华人地区的语言。现代标准汉语共有四种声调，并在弱音节中使用轻声。"
+    output_filename = "zcy.wav"
     input_device_index = 1  # 设置为所需的音频输入设备索引
-    # record_audio(output_filename, input_device_index=input_device_index)
-    play_audio(output_filename)
+    record_audio(output_filename, input_device_index=input_device_index)
+    # play_audio(output_filename)
