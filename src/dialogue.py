@@ -59,8 +59,8 @@ def speak_text(text):
     engine = pyttsx3.init()
     engine.setProperty('rate', 180)
     engine.setProperty('volume', 1.0)
-    voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[1].id)
+    # voices = engine.getProperty('voices')
+    # engine.setProperty('voice', voices[1].id)
     engine.say(text)
     engine.runAndWait()
     engine.stop()
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     while True:
         input_device_index = None
         audio_data = record_audio_with_silence_detection(silence_threshold=500, silence_duration=1, input_device_index=input_device_index)
-        model_path = "../speech-recog/vosk-model-small-en-us-0.15"
+        model_path = "../speech-recog/vosk-model-cn-0.22"
         transcribed_text = transcribe_audio_to_text_vosk(audio_data, model_path)
         print("User said:", transcribed_text)
         if not transcribed_text:
