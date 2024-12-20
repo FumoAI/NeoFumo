@@ -13,11 +13,8 @@ def extract_speaker_embedding(pipeline, audio_file, speaker_label):
         if label == speaker_label:
             end_time = min(turn.end, audio_length)
             segment = Segment(turn.start, end_time)
-            # print(f"\n\n\nExtracting speaker embedding for {speaker_label} from {segment.start:.2f}s to {segment.end:.2f}s\n\n\n")
             if segment.end - segment.start > 0.1:  # 确保片段长度大于0.1秒
                 speaker_embedding = inference.crop(audio_file, segment)
-            else:
-                print("Segment too short for inference.")
             break
     return speaker_embedding
 
