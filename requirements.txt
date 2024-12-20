@@ -2,3 +2,4 @@ openai
 pyaudio
 sqlite3
 vosk
+pydiub

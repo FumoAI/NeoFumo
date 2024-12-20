@@ -2,15 +2,22 @@ from pyannote.audio import Model, Pipeline, Inference
 from pyannote.core import Segment
 from scipy.spatial.distance import cosine
 from config import HUGGINGFACE_TOKEN
+from pydub import AudioSegment
 
 def extract_speaker_embedding(pipeline, audio_file, speaker_label):
     diarization = pipeline(audio_file)
     speaker_embedding = None
+    audio = AudioSegment.from_file(audio_file)
+    audio_length = len(audio) / 1000.0  # 获取音频长度（秒）
     for turn, _, label in diarization.itertracks(yield_label=True):
         if label == speaker_label:
-            segment = Segment(turn.start + 0.05, turn.end - 0.05) # need fix
-            print(f"\n\n\nExtracting speaker embedding for {speaker_label} from {segment.start:.2f}s to {segment.end:.2f}s\n\n\n")
-            speaker_embedding = inference.crop(audio_file, segment)
+            end_time = min(turn.end, audio_length)
+            segment = Segment(turn.start, end_time)
+            # print(f"\n\n\nExtracting speaker embedding for {speaker_label} from {segment.start:.2f}s to {segment.end:.2f}s\n\n\n")
+            if segment.end - segment.start > 0.1:  # 确保片段长度大于0.1秒
+                speaker_embedding = inference.crop(audio_file, segment)
+            else:
+                print("Segment too short for inference.")
             break
     return speaker_embedding
 
@@ -20,14 +27,18 @@ def recognize_speaker(pipeline, audio_file):
     speaker_turns = []
     for turn, _, speaker_label in diarization.itertracks(yield_label=True):
         # 提取切片的声纹特征
-        embedding = inference.crop(audio_file, turn)  
+        embedding = inference.crop(audio_file, turn)
+        embedding = embedding.flatten()  # 确保embedding是一维向量
         distances = {}
-        for speaker, embeddings in speaker_embeddings.items():  
-	        # 计算与已知说话人的声纹特征的余弦距离
-            distances[speaker] = min([cosine(embedding, e) for e in embeddings])
+        for speaker, embeddings in speaker_embeddings.items():
+            # 计算与已知说话人的声纹特征的余弦距离
+            valid_embeddings = [e for e in embeddings if e is not None]
+            if valid_embeddings:
+                distances[speaker] = min([cosine(embedding, e.flatten()) for e in valid_embeddings])
         # 选择距离最小的说话人
-        recognized_speaker = min(distances, key=distances.get)  
-        speaker_turns.append((turn, recognized_speaker))  
+        if distances:
+            recognized_speaker = min(distances, key=distances.get)
+            speaker_turns.append((turn, recognized_speaker))
         # 记录说话人的时间段和余弦距离最小的预测说话人
     return speaker_turns
 
